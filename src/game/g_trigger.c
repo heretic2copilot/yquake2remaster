@@ -1204,3 +1204,139 @@ SP_choose_cdtrack(edict_t *self)
 	InitTrigger(self);
 	self->touch = choose_cdtrack_touch;
 }
+
+/*
+ * ======================================================================
+ *
+ * trigger_fog
+ *
+ * ======================================================================
+ */
+
+#define SPAWNFLAG_FOG_AFFECT_FOG 1
+#define SPAWNFLAG_FOG_AFFECT_HEIGHTFOG 2
+#define SPAWNFLAG_FOG_INSTANTANEOUS 4
+#define SPAWNFLAG_FOG_FORCE 8
+#define SPAWNFLAG_FOG_BLEND 16
+
+void trigger_fog_touch(edict_t *self, edict_t *other, cplane_t *plane /* unused */, csurface_t *surf /* unused */)
+{
+	if (!other->client)
+		return;
+
+	if (self->timestamp > level.time)
+		return;
+
+	self->timestamp = level.time + self->wait;
+
+	edict_t *fog_value_storage = self;
+
+	if (self->movetarget)
+		fog_value_storage = self->movetarget;
+
+	float transition_time = 0.5f;
+	if (self->spawnflags & SPAWNFLAG_FOG_INSTANTANEOUS)
+		transition_time = 0.0f;
+	else
+		transition_time = fog_value_storage->delay;
+	// TODO: Use transition_time for fog transition logic if needed
+
+	if (self->spawnflags & SPAWNFLAG_FOG_BLEND)
+	{
+		vec3_t center, half_size, start, end, player_dist;
+		float dist;
+
+		VectorAdd(self->absmin, self->absmax, center);
+		VectorScale(center, 0.5, center);
+		VectorScale(self->size, 0.5, half_size);
+		VectorMA(half_size, 1.0, other->size, half_size);
+		VectorScale(self->movedir, -1.0, start);
+		VectorScale(self->movedir, 1.0, end);
+		VectorSubtract(other->s.origin, center, player_dist);
+		player_dist[0] *= fabs(self->movedir[0]);
+		player_dist[1] *= fabs(self->movedir[1]);
+		player_dist[2] *= fabs(self->movedir[2]);
+
+		VectorSubtract(player_dist, start, player_dist);
+		dist = VectorLength(player_dist);
+		VectorSubtract(start, end, start);
+		dist /= VectorLength(start);
+		if (dist < 0.0f) dist = 0.0f;
+		if (dist > 1.0f) dist = 1.0f;
+
+		if (self->spawnflags & SPAWNFLAG_FOG_AFFECT_FOG)
+		{
+			// TODO: lerp fog values
+			// other->client->pers.wanted_fog = ...
+		}
+
+		if (self->spawnflags & SPAWNFLAG_FOG_AFFECT_HEIGHTFOG)
+		{
+			// TODO: lerp heightfog values
+			// other->client->pers.wanted_heightfog = ...
+		}
+
+		return;
+	}
+
+	int use_on = 1;
+
+	if (!(self->spawnflags & SPAWNFLAG_FOG_FORCE))
+	{
+		float len = VectorLength(other->velocity);
+		vec3_t forward;
+		VectorNormalize2(other->velocity, forward);
+
+		if (len <= 0.0001f)
+			return;
+
+		use_on = (_DotProduct(forward, self->movedir) > 0);
+	}
+
+	if (self->spawnflags & SPAWNFLAG_FOG_AFFECT_FOG)
+	{
+		if (use_on)
+		{
+			// TODO: set wanted_fog to "on" values
+		}
+		else
+		{
+			// TODO: set wanted_fog to "off" values
+		}
+	}
+
+	if (self->spawnflags & SPAWNFLAG_FOG_AFFECT_HEIGHTFOG)
+	{
+		if (use_on)
+		{
+			// TODO: set wanted_heightfog to "on" values
+		}
+		else
+		{
+			// TODO: set wanted_heightfog to "off" values
+		}
+	}
+}
+
+void SP_trigger_fog(edict_t *self)
+{
+	if (self->s.angles[YAW] == 0)
+		self->s.angles[YAW] = 360;
+
+	InitTrigger(self);
+
+	if (!(self->spawnflags & (SPAWNFLAG_FOG_AFFECT_FOG | SPAWNFLAG_FOG_AFFECT_HEIGHTFOG)))
+		gi.dprintf("WARNING: trigger_fog with no fog spawnflags set\n");
+
+	if (self->target)
+	{
+		self->movetarget = G_PickTarget(self->target);
+		if (self->movetarget && !self->movetarget->delay)
+			self->movetarget->delay = 0.5f;
+	}
+
+	if (!self->delay)
+		self->delay = 0.5f;
+
+	self->touch = trigger_fog_touch;
+}
