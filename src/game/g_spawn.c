@@ -1598,8 +1598,15 @@ DetermineBBox(char *classname, vec3_t mins, vec3_t maxs)
 
 	ED_CallSpawn(newEnt);
 
-	VectorCopy(newEnt->mins, mins);
-	VectorCopy(newEnt->maxs, maxs);
+	if (mins)
+	{
+		VectorCopy(newEnt->mins, mins);
+	}
+
+	if (maxs)
+	{
+		VectorCopy(newEnt->maxs, maxs);
+	}
 
 	G_FreeEdict(newEnt);
 }
@@ -1867,9 +1874,9 @@ spawngrow_think(edict_t *self)
 
 	for (i = 0; i < 2; i++)
 	{
-		self->s.angles[0] = rand() % 360;
-		self->s.angles[1] = rand() % 360;
-		self->s.angles[2] = rand() % 360;
+		self->s.angles[PITCH] = rand() % 360;
+		self->s.angles[YAW] = rand() % 360;
+		self->s.angles[ROLL] = rand() % 360;
 	}
 
 	if ((level.time < self->wait) && (self->s.frame < 2))
@@ -1910,9 +1917,9 @@ SpawnGrow_Spawn(vec3_t startpos, int size)
 
 	for (i = 0; i < 2; i++)
 	{
-		ent->s.angles[0] = rand() % 360;
-		ent->s.angles[1] = rand() % 360;
-		ent->s.angles[2] = rand() % 360;
+		ent->s.angles[PITCH] = rand() % 360;
+		ent->s.angles[YAW] = rand() % 360;
+		ent->s.angles[ROLL] = rand() % 360;
 	}
 
 	ent->solid = SOLID_NOT;
