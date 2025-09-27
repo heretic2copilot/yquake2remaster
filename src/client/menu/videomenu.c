@@ -25,11 +25,8 @@
  * =======================================================================
  */
 
-#include "../../client/header/client.h"
-#include "../../client/menu/header/qmenu.h"
+#include "../header/client.h"
 #include "header/qmenu.h"
-
-extern void M_ForceMenuOff(void);
 
 static cvar_t *r_mode;
 static cvar_t *vid_displayindex;

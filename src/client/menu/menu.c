@@ -69,8 +69,6 @@ static void M_Menu_ControllerButtons_f(void);
 static void M_Menu_ControllerAltButtons_f(void);
 static void M_Menu_Quit_f(void);
 
-void M_Menu_Credits(void);
-
 qboolean m_entersound; /* play after drawing a frame, so caching won't disrupt the sound */
 
 /* Maximal number of submenus */
@@ -145,6 +143,7 @@ M_PopMenu(void)
 	if (m_menudepth < 1)
 	{
 		Com_Error(ERR_FATAL, "%s: depth < 1", __func__);
+		return;
 	}
 
 	m_menudepth--;
@@ -347,7 +346,7 @@ Key_GetMenuKey(int key)
 	return key;
 }
 
-const char *
+static const char *
 Default_MenuKey(menuframework_s *m, int key)
 {
 	const char *sound = NULL;
@@ -3530,6 +3529,12 @@ Mods_MenuInit(void)
 
 	/* create array of bracketed display names from folder names - TG626 */
 	displaynames = malloc(sizeof(*displaynames) * (nummods + 1));
+	YQ2_COM_CHECK_OOM(displaynames, "malloc()", sizeof(*displaynames) * (nummods + 1))
+	if (!displaynames)
+	{
+		/* unaware about YQ2_ATTR_NORETURN_FUNCPTR? */
+		return;
+	}
 
 	for (i = 0; i < nummods; i++)
 	{
@@ -3552,6 +3557,7 @@ Mods_MenuInit(void)
 		displaynames[i] = malloc(strlen(modname) + 1);
 		strcpy(displaynames[i], modname);
 	}
+
 	displaynames[nummods] = NULL;
 	/* end TG626 */
 
@@ -6085,7 +6091,10 @@ PlayerDirectoryList(void)
 	FS_FreeList(list, num);
 
 	// sort them male, female, alphabetical
-	qsort(s_directory.data, s_directory.num - 1, sizeof(char*), dircmp_func);
+	if (s_directory.num > 2)
+	{
+		qsort(s_directory.data, s_directory.num - 1, sizeof(char*), dircmp_func);
+	}
 
 	return true;
 }
