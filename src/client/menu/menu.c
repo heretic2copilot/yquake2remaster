@@ -6149,7 +6149,7 @@ HasSkinsInDir(const char *dirname, int *num)
 			return false;
 		}
 
-		if (list_png)
+		if (list_png && num_png)
 		{
 			int j;
 
@@ -6171,7 +6171,7 @@ HasSkinsInDir(const char *dirname, int *num)
 			}
 		}
 
-		if (list_pcx)
+		if (list_pcx && num_pcx)
 		{
 			int j;
 
@@ -6193,7 +6193,7 @@ HasSkinsInDir(const char *dirname, int *num)
 			}
 		}
 
-		if (list_m8)
+		if (list_m8 && num_m8)
 		{
 			int j;
 
