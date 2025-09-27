@@ -137,6 +137,7 @@ typedef struct
 	menucommon_s generic;
 } menuseparator_s;
 
+void M_PopMenu(void);
 void M_ForceMenuOff(void);
 void M_PushMenu(menuframework_s* menu);
 

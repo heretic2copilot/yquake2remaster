@@ -973,8 +973,6 @@ VID_MenuDraw(void)
 const char *
 VID_MenuKey(int key)
 {
-	extern void M_PopMenu(void);
-
 	menuframework_s *m = &s_opengl_menu;
 	static const char *sound = "misc/menu1.wav";
 	int menu_key = Key_GetMenuKey(key);
