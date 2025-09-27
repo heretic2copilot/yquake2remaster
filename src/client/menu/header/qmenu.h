@@ -137,6 +137,10 @@ typedef struct
 	menucommon_s generic;
 } menuseparator_s;
 
+void IN_ApplyJoyPreset(void);
+qboolean IN_MatchJoyPreset(void);
+float CalcFov(float fov_x, float w, float h);
+
 void M_PopMenu(void);
 void M_ForceMenuOff(void);
 void M_PushMenu(menuframework_s* menu);

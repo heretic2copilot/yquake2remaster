@@ -2236,9 +2236,6 @@ static menuaction_s s_joy_gyro_action = {0};
 static menuaction_s s_joy_customize_buttons_action = {0};
 static menuaction_s s_joy_customize_alt_buttons_action = {0};
 
-extern void IN_ApplyJoyPreset(void);
-extern qboolean IN_MatchJoyPreset(void);
-
 static void
 RefreshJoyMenuFunc(void *unused)
 {
@@ -6631,8 +6628,6 @@ PlayerConfig_MenuInit(void)
 
 	return true;
 }
-
-extern float CalcFov(float fov_x, float w, float h);
 
 /*
  * Model animation
