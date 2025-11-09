@@ -61,38 +61,64 @@ Mod_LoadAnimGroupList(dmdx_t *pheader)
 	char newname[16] = {0}, oldname[16] = {0};
 	int i, oldframe = 0, currgroup = 0;
 	dmdxframegroup_t *pframegroup;
+	int lastseqnum = -1;
 
 	pframegroup = (dmdxframegroup_t *)((char *)pheader + pheader->ofs_animgroup);
 
 	for (i = 0; i < pheader->num_frames; i++)
 	{
 		daliasxframe_t *poutframe;
+		char basename[16] = {0};
+		int seqnum = 0;
+		qboolean new_sequence = false;
 
 		poutframe = (daliasxframe_t *) ((byte *)pheader
 			+ pheader->ofs_frames + i * pheader->framesize);
 
 		if (poutframe->name[0])
 		{
+			/* Copy base animation name without numbers */
+			Q_strlcpy(basename, poutframe->name, sizeof(basename));
+			
+			/* Find where the numbers start */
 			size_t j;
-
-			Q_strlcpy(newname, poutframe->name, sizeof(poutframe->name));
-			for (j = strlen(newname) - 1; j > 0; j--)
+			for (j = 0; j < strlen(basename); j++)
 			{
-				if ((newname[j] >= '0' && newname[j] <= '9') ||
-					(newname[j] == '_'))
+				if (basename[j] >= '0' && basename[j] <= '9')
 				{
-					newname[j] = 0;
-					continue;
+					/* Get sequence number */
+					seqnum = atoi(basename + j);
+					basename[j] = 0;
+					break;
 				}
-				break;
 			}
+
+			/* Check if this is a new sequence */
+			if (lastseqnum != -1)
+			{
+				/* Check for sequence breaks */
+				if (strcmp(oldname, basename) == 0)
+				{
+					/* Same base name - check if numbers are sequential */
+					if (seqnum != lastseqnum + 1)
+					{
+						new_sequence = true;
+					}
+				}
+			}
+
+			/* Update sequence tracking */
+			lastseqnum = seqnum;
+			Q_strlcpy(newname, basename, sizeof(newname));
 		}
 		else
 		{
 			*newname = 0;
+			new_sequence = true;
+			lastseqnum = -1;
 		}
 
-		if (strcmp(newname, oldname))
+		if (strcmp(newname, oldname) || new_sequence)
 		{
 			/* Save previous group */
 			if ((i != oldframe) && (currgroup < pheader->num_animgroup))
@@ -159,7 +185,7 @@ Mod_LoadAllocate(const char *mod_name, dmdx_t *dmdxheader, void **extradata)
 	dmdxheader->ofs_skins = dmdxheader->ofs_meshes + dmdxheader->num_meshes * sizeof(dmdxmesh_t);
 	dmdxheader->ofs_st = dmdxheader->ofs_skins + dmdxheader->num_skins * MAX_SKINNAME;
 	dmdxheader->ofs_tris = dmdxheader->ofs_st + dmdxheader->num_st * sizeof(dstvert_t);
-	dmdxheader->ofs_frames = dmdxheader->ofs_tris + dmdxheader->num_tris * sizeof(dtriangle_t);
+	dmdxheader->ofs_frames = dmdxheader->ofs_tris + dmdxheader->num_tris *	sizeof(dtriangle_t);
 	dmdxheader->ofs_glcmds = dmdxheader->ofs_frames + dmdxheader->num_frames * dmdxheader->framesize;
 	dmdxheader->ofs_imgbit = dmdxheader->ofs_glcmds + dmdxheader->num_glcmds * sizeof(int);
 	dmdxheader->ofs_animgroup = dmdxheader->ofs_imgbit + (
