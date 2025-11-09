@@ -31,12 +31,14 @@ R_DrawAliasDrawCommands(const entity_t *currententity, int *order, const int *or
 	float alpha, dxtrivertx_t *verts, vec4_t *s_lerped, const float *shadelight,
 	const float *shadevector)
 {
-	vec3_t tessVertices[64]; // Max vertices for tessellation level 8
-	vec3_t tessNormals[64];
+	vec3_t tessVertices[128]; // Max vertices for tessellation 
+	vec3_t tessNormals[128];
+	float tessTexCoords[256]; // u,v pairs
 
 	while (1)
 	{
 		int count;
+		qboolean isFan;
 
 		/* get the vertex count and primitive type */
 		count = *order++;
@@ -46,7 +48,8 @@ R_DrawAliasDrawCommands(const entity_t *currententity, int *order, const int *or
 			break; /* done */
 		}
 
-		if (count < 0)
+		isFan = count < 0;
+		if (isFan)
 		{
 			count = -count;
 			R_SetBufferIndices(GL_TRIANGLE_FAN, count);
@@ -92,94 +95,162 @@ R_DrawAliasDrawCommands(const entity_t *currententity, int *order, const int *or
 		}
 		else
 		{
-			do
+			if (count >= 3)
 			{
-				int i, index_xyz;
-				vec3_t normal;
-				float l, tex[2];
-				int idx[3];
-				int num_tess;
+				// Store original vertices and data
+				int numOriginalVerts = count;
+				vec3_t *originalVerts = alloca(sizeof(vec3_t) * numOriginalVerts);
+				vec3_t *originalNormals = alloca(sizeof(vec3_t) * numOriginalVerts);
+				float *originalTexCoords = alloca(sizeof(float) * 2 * numOriginalVerts);
+				int totalTessVerts = 0;
 
-				// Save original triangle vertices and normals for tessellation
-				vec3_t v0, v1, v2, n0, n1, n2;
+				// First collect all vertices
+				for (int i = 0; i < numOriginalVerts; i++)
+				{
+					int index_xyz = order[i*3 + 2];
+					
+					// Copy vertex
+					VectorCopy(s_lerped[index_xyz], originalVerts[i]);
 
-				if (count >= 3) {
-					// Get vertex/normal data for tessellation
-					for (i = 0; i < 3; i++) {
-						VectorCopy(s_lerped[order[2]], v0);
-						for (int j = 0; j < 3; j++) {
-							n0[j] = verts[order[2]].normal[j] / 127.0f;
-						}
-						order += 3;
+					// Copy normal
+					for (int j = 0; j < 3; j++)
+					{
+						originalNormals[i][j] = verts[index_xyz].normal[j] / 127.0f;
 					}
 
-					// Tessellate the triangle
-					num_tess = R_TessellateTriangle(v0, v1, v2, n0, n1, n2, 
-						tessVertices, tessNormals);
+					// Copy texcoords  
+					originalTexCoords[i*2] = ((float *)order)[i*3];
+					originalTexCoords[i*2+1] = ((float *)order)[i*3+1];
+				}
 
-					// Draw tessellated vertices
-					for (i = 0; i < num_tess; i++) {
-						GLBUFFER_VERTEX(tessVertices[i][0], 
-							tessVertices[i][1], 
-							tessVertices[i][2])
+				// Now process triangles based on primitive type
+				if (isFan)
+				{
+					// Triangle fan shares first vertex
+					for (int i = 2; i < numOriginalVerts; i++)
+					{
+						// Get vertices for current triangle in fan
+						vec3_t tri_verts[3], tri_norms[3];
+						VectorCopy(originalVerts[0], tri_verts[0]);
+						VectorCopy(originalVerts[i-1], tri_verts[1]); 
+						VectorCopy(originalVerts[i], tri_verts[2]);
 
-						l = DotProduct(tessNormals[i], shadevector) + 1;
+						VectorCopy(originalNormals[0], tri_norms[0]);
+						VectorCopy(originalNormals[i-1], tri_norms[1]);
+						VectorCopy(originalNormals[i], tri_norms[2]);
 
-						for (int j = 0; j < 3; j++)
+						// Tessellate this triangle
+						int numTessVerts = R_TessellateTriangle(
+							tri_verts[0], tri_verts[1], tri_verts[2],
+							tri_norms[0], tri_norms[1], tri_norms[2],
+							&tessVertices[totalTessVerts],
+							&tessNormals[totalTessVerts]);
+
+						// Interpolate texture coordinates for new vertices
+						for (int j = 0; j < numTessVerts; j++)
 						{
-							idx[j] = l * shadelight[j] * 255;
-							idx[j] = Q_clamp(idx[j], 0, 255);
+							float u0 = originalTexCoords[0], v0 = originalTexCoords[1];
+							float u1 = originalTexCoords[(i-1)*2], v1 = originalTexCoords[(i-1)*2+1];
+							float u2 = originalTexCoords[i*2], v2 = originalTexCoords[i*2+1];
+
+							// Simple barycentric interpolation
+							tessTexCoords[(totalTessVerts + j)*2] = (u0 + u1 + u2) / 3.0f;
+							tessTexCoords[(totalTessVerts + j)*2 + 1] = (v0 + v1 + v2) / 3.0f;
 						}
 
-						if (gl_state.minlight_set)
+						totalTessVerts += numTessVerts;
+					}
+				}
+				else // Triangle strip
+				{
+					for (int i = 2; i < numOriginalVerts; i++)
+					{
+						// Get vertices for current triangle in strip
+						vec3_t tri_verts[3], tri_norms[3];
+						
+						// Alternate triangle orientation in strip
+						if (i & 1)
 						{
-							for (int j = 0; j < 3; j++)
-							{
-								idx[j] = minlight[idx[j]];
-							}
+							VectorCopy(originalVerts[i-2], tri_verts[0]);
+							VectorCopy(originalVerts[i-1], tri_verts[1]);
+							VectorCopy(originalVerts[i], tri_verts[2]);
+
+							VectorCopy(originalNormals[i-2], tri_norms[0]);
+							VectorCopy(originalNormals[i-1], tri_norms[1]); 
+							VectorCopy(originalNormals[i], tri_norms[2]);
+						}
+						else
+						{
+							VectorCopy(originalVerts[i-2], tri_verts[0]);
+							VectorCopy(originalVerts[i], tri_verts[1]);
+							VectorCopy(originalVerts[i-1], tri_verts[2]);
+
+							VectorCopy(originalNormals[i-2], tri_norms[0]);
+							VectorCopy(originalNormals[i], tri_norms[1]);
+							VectorCopy(originalNormals[i-1], tri_norms[2]);
 						}
 
-						GLBUFFER_COLOR(gammatable[idx[0]],
-							gammatable[idx[1]],
-							gammatable[idx[2]], alpha * 255)
+						// Tessellate this triangle
+						int numTessVerts = R_TessellateTriangle(
+							tri_verts[0], tri_verts[1], tri_verts[2],
+							tri_norms[0], tri_norms[1], tri_norms[2],
+							&tessVertices[totalTessVerts],
+							&tessNormals[totalTessVerts]);
 
 						// Interpolate texture coordinates
-						tex[0] = ((float *)order)[-9];
-						tex[1] = ((float *)order)[-8];
-						GLBUFFER_SINGLETEX(tex[0], tex[1])
+						for (int j = 0; j < numTessVerts; j++)
+						{
+							float u0 = originalTexCoords[(i-2)*2];
+							float v0 = originalTexCoords[(i-2)*2+1];
+							float u1, v1, u2, v2;
+
+							if (i & 1)
+							{
+								u1 = originalTexCoords[(i-1)*2];
+								v1 = originalTexCoords[(i-1)*2+1];
+								u2 = originalTexCoords[i*2];
+								v2 = originalTexCoords[i*2+1];
+							}
+							else 
+							{
+								u1 = originalTexCoords[i*2];
+								v1 = originalTexCoords[i*2+1];
+								u2 = originalTexCoords[(i-1)*2];
+								v2 = originalTexCoords[(i-1)*2+1];
+							}
+
+							// Simple barycentric interpolation
+							tessTexCoords[(totalTessVerts + j)*2] = (u0 + u1 + u2) / 3.0f;
+							tessTexCoords[(totalTessVerts + j)*2 + 1] = (v0 + v1 + v2) / 3.0f;
+						}
+
+						totalTessVerts += numTessVerts;
 					}
+				}
 
-					count -= 3;
-				} else {
-					// Handle remaining vertices
-					tex[0] = ((float *)order)[0];
-					tex[1] = ((float *)order)[1];
-					index_xyz = order[2];
-					order += 3;
+				// Draw all tessellated vertices
+				for (int i = 0; i < totalTessVerts; i++)
+				{
+					float l;
+					int idx[3];
 
-					for(i = 0; i < 3; i++)
+					GLBUFFER_VERTEX(tessVertices[i][0],
+						tessVertices[i][1],
+						tessVertices[i][2])
+
+					l = DotProduct(tessNormals[i], shadevector) + 1;
+
+					for (int j = 0; j < 3; j++)
 					{
-						normal[i] = verts[index_xyz].normal[i] / 127.f;
-					}
-
-					l = DotProduct(normal, shadevector) + 1;
-
-					GLBUFFER_VERTEX(s_lerped[index_xyz][0],
-						s_lerped[index_xyz][1], s_lerped[index_xyz][2])
-
-					GLBUFFER_SINGLETEX(tex[0], tex[1])
-
-					for (i = 0; i < 3; i++)
-					{
-						idx[i] = l * shadelight[i] * 255;
-						idx[i] = Q_clamp(idx[i], 0, 255);
+						idx[j] = l * shadelight[j] * 255;
+						idx[j] = Q_clamp(idx[j], 0, 255);
 					}
 
 					if (gl_state.minlight_set)
 					{
-						for (i = 0; i < 3; i++)
+						for (int j = 0; j < 3; j++)
 						{
-							idx[i] = minlight[idx[i]];
+							idx[j] = minlight[idx[j]];
 						}
 					}
 
@@ -187,10 +258,61 @@ R_DrawAliasDrawCommands(const entity_t *currententity, int *order, const int *or
 						gammatable[idx[1]],
 						gammatable[idx[2]], alpha * 255)
 
-					count--;
+					GLBUFFER_SINGLETEX(tessTexCoords[i*2],
+						tessTexCoords[i*2+1])
 				}
+
+				// Update order pointer
+				order += count * 3;
+				count = 0;
 			}
-			while (count > 0);
+
+			// Handle any remaining vertices
+			while (count > 0)
+			{
+				vec3_t normal;
+				float l;
+				int idx[3];
+				float tex[2];
+
+				tex[0] = ((float *)order)[0];
+				tex[1] = ((float *)order)[1];
+				int index_xyz = order[2];
+				order += 3;
+
+				for(int i = 0; i < 3; i++)
+				{
+					normal[i] = verts[index_xyz].normal[i] / 127.f;
+				}
+
+				l = DotProduct(normal, shadevector) + 1;
+
+				GLBUFFER_VERTEX(s_lerped[index_xyz][0],
+					s_lerped[index_xyz][1],
+					s_lerped[index_xyz][2])
+
+				GLBUFFER_SINGLETEX(tex[0], tex[1])
+
+				for (int i = 0; i < 3; i++)
+				{
+					idx[i] = l * shadelight[i] * 255;
+					idx[i] = Q_clamp(idx[i], 0, 255);
+				}
+
+				if (gl_state.minlight_set)
+				{
+					for (int i = 0; i < 3; i++)
+					{
+						idx[i] = minlight[idx[i]];
+					}
+				}
+
+				GLBUFFER_COLOR(gammatable[idx[0]],
+					gammatable[idx[1]],
+					gammatable[idx[2]], alpha * 255)
+
+				count--;
+			}
 		}
 	}
 }
