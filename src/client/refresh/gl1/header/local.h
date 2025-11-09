@@ -62,6 +62,29 @@
 #define MAX_VERTICES	16384
 #define MAX_INDICES 	(MAX_VERTICES * 4)
 
+// Buffer macros
+#define GLBUFFER_VERTEX( x, y, z ) \
+	gl_buf.vtx[gl_buf.vt++] = x; \
+	gl_buf.vtx[gl_buf.vt++] = y; \
+	gl_buf.vtx[gl_buf.vt++] = z;
+
+#define GLBUFFER_TEXCOORD( x, y ) \
+	gl_buf.tex[gl_buf.tx++] = x; \
+	gl_buf.tex[gl_buf.tx++] = y;
+
+#define GLBUFFER_COLOR( r, g, b, a ) \
+	gl_buf.clr[gl_buf.cl++] = r; \
+	gl_buf.clr[gl_buf.cl++] = g; \
+	gl_buf.clr[gl_buf.cl++] = b; \
+	gl_buf.clr[gl_buf.cl++] = a;
+
+#define GLBUFFER_SINGLETEX( x, y ) \
+	gl_buf.tex[0][gl_buf.tx++] = x; \
+	gl_buf.tex[0][gl_buf.tx++] = y;
+
+#define GLBUFFER_INDEX( i ) \
+	gl_buf.idx[idx_ptr++] = i;
+
 #if defined(USE_SDL3) || defined(YQ2_GL1_GLES)
 // Use internal lookup table instead of SDL2 hw gamma funcs for GL1/GLES1
 #define GL1_GAMMATABLE
@@ -250,21 +273,6 @@ void R_TextureSolidMode(const char *string);
 int Scrap_AllocBlock(int w, int h, int *x, int *y);
 
 // GL buffer operations
-
-#define GLBUFFER_VERTEX(X, Y, Z) \
-	gl_buf.vtx[gl_buf.vt] = X; gl_buf.vtx[gl_buf.vt+1] = Y; \
-	gl_buf.vtx[gl_buf.vt+2] = Z; gl_buf.vt += 3;
-
-#define GLBUFFER_SINGLETEX(S, T) \
-	gl_buf.tex[0][gl_buf.tx] = S; gl_buf.tex[0][gl_buf.tx+1] = T; gl_buf.tx += 2;
-
-#define GLBUFFER_MULTITEX(CS, CT, LS, LT) \
-	gl_buf.tex[0][gl_buf.tx] = CS; gl_buf.tex[0][gl_buf.tx+1] = CT; \
-	gl_buf.tex[1][gl_buf.tx] = LS; gl_buf.tex[1][gl_buf.tx+1] = LT; gl_buf.tx += 2;
-
-#define GLBUFFER_COLOR(R, G, B, A) \
-	gl_buf.clr[gl_buf.cl] = R; gl_buf.clr[gl_buf.cl+1] = G; \
-	gl_buf.clr[gl_buf.cl+2] = B; gl_buf.clr[gl_buf.cl+3] = A; gl_buf.cl += 4;
 
 void R_ApplyGLBuffer(void);
 void R_UpdateGLBuffer(buffered_draw_t type, int colortex, int lighttex, int flags, float alpha);

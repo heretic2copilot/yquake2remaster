@@ -34,6 +34,7 @@ R_DrawAliasDrawCommands(const entity_t *currententity, int *order, const int *or
 	vec3_t tessVertices[128]; // Max vertices for tessellation 
 	vec3_t tessNormals[128];
 	float tessTexCoords[256]; // u,v pairs
+	int tessIndices[384]; // Max indices for tessellated geometry (128 vertices * 3)
 
 	while (1)
 	{
@@ -52,16 +53,13 @@ R_DrawAliasDrawCommands(const entity_t *currententity, int *order, const int *or
 		if (isFan)
 		{
 			count = -count;
-			R_SetBufferIndices(GL_TRIANGLE_FAN, count);
-		}
-		else
-		{
-			R_SetBufferIndices(GL_TRIANGLE_STRIP, count);
 		}
 
 		if (currententity->flags &
 			(RF_SHELL_RED | RF_SHELL_GREEN | RF_SHELL_BLUE))
 		{
+			// Shell rendering path - no tessellation needed
+			R_SetBufferIndices(GL_TRIANGLE_FAN, count);
 			do
 			{
 				int index_xyz, i;
@@ -103,6 +101,7 @@ R_DrawAliasDrawCommands(const entity_t *currententity, int *order, const int *or
 				vec3_t *originalNormals = alloca(sizeof(vec3_t) * numOriginalVerts);
 				float *originalTexCoords = alloca(sizeof(float) * 2 * numOriginalVerts);
 				int totalTessVerts = 0;
+				int totalTessIndices = 0;
 
 				// First collect all vertices
 				for (int i = 0; i < numOriginalVerts; i++)
@@ -140,14 +139,22 @@ R_DrawAliasDrawCommands(const entity_t *currententity, int *order, const int *or
 						VectorCopy(originalNormals[i], tri_norms[2]);
 
 						// Tessellate this triangle
-						int numTessVerts = R_TessellateTriangle(
+						int numNewVerts = R_TessellateTriangle(
 							tri_verts[0], tri_verts[1], tri_verts[2],
 							tri_norms[0], tri_norms[1], tri_norms[2],
 							&tessVertices[totalTessVerts],
 							&tessNormals[totalTessVerts]);
 
+						// Create indices for tessellated triangle fan
+						for (int j = 0; j < numNewVerts - 2; j++)
+						{
+							tessIndices[totalTessIndices++] = totalTessVerts;
+							tessIndices[totalTessIndices++] = totalTessVerts + j + 1;
+							tessIndices[totalTessIndices++] = totalTessVerts + j + 2;
+						}
+
 						// Interpolate texture coordinates for new vertices
-						for (int j = 0; j < numTessVerts; j++)
+						for (int j = 0; j < numNewVerts; j++)
 						{
 							float u0 = originalTexCoords[0], v0 = originalTexCoords[1];
 							float u1 = originalTexCoords[(i-1)*2], v1 = originalTexCoords[(i-1)*2+1];
@@ -158,7 +165,7 @@ R_DrawAliasDrawCommands(const entity_t *currententity, int *order, const int *or
 							tessTexCoords[(totalTessVerts + j)*2 + 1] = (v0 + v1 + v2) / 3.0f;
 						}
 
-						totalTessVerts += numTessVerts;
+						totalTessVerts += numNewVerts;
 					}
 				}
 				else // Triangle strip
@@ -191,14 +198,22 @@ R_DrawAliasDrawCommands(const entity_t *currententity, int *order, const int *or
 						}
 
 						// Tessellate this triangle
-						int numTessVerts = R_TessellateTriangle(
+						int numNewVerts = R_TessellateTriangle(
 							tri_verts[0], tri_verts[1], tri_verts[2],
 							tri_norms[0], tri_norms[1], tri_norms[2],
 							&tessVertices[totalTessVerts],
 							&tessNormals[totalTessVerts]);
 
+						// Create indices for tessellated triangles
+						for (int j = 0; j < numNewVerts - 2; j++)
+						{
+							tessIndices[totalTessIndices++] = totalTessVerts;
+							tessIndices[totalTessIndices++] = totalTessVerts + j + 1;
+							tessIndices[totalTessIndices++] = totalTessVerts + j + 2;
+						}
+
 						// Interpolate texture coordinates
-						for (int j = 0; j < numTessVerts; j++)
+						for (int j = 0; j < numNewVerts; j++)
 						{
 							float u0 = originalTexCoords[(i-2)*2];
 							float v0 = originalTexCoords[(i-2)*2+1];
@@ -224,9 +239,12 @@ R_DrawAliasDrawCommands(const entity_t *currententity, int *order, const int *or
 							tessTexCoords[(totalTessVerts + j)*2 + 1] = (v0 + v1 + v2) / 3.0f;
 						}
 
-						totalTessVerts += numTessVerts;
+						totalTessVerts += numNewVerts;
 					}
 				}
+
+				// Set up indices for triangles
+				R_SetBufferIndices(GL_TRIANGLES, totalTessIndices / 3);
 
 				// Draw all tessellated vertices
 				for (int i = 0; i < totalTessVerts; i++)
@@ -260,6 +278,12 @@ R_DrawAliasDrawCommands(const entity_t *currententity, int *order, const int *or
 
 					GLBUFFER_SINGLETEX(tessTexCoords[i*2],
 						tessTexCoords[i*2+1])
+				}
+
+				// Set up indices buffer
+				for (int i = 0; i < totalTessIndices; i++)
+				{
+					GLBUFFER_INDEX(tessIndices[i]);
 				}
 
 				// Update order pointer

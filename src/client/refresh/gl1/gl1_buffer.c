@@ -366,6 +366,17 @@ R_SetBufferIndices(GLenum primitive, GLuint vertices_num)
 
 	switch (primitive)
 	{
+		case GL_TRIANGLES:
+			// For regular triangles, each 3 vertices form a complete triangle
+			for (i = 0; i < vertices_num; i += 3)
+			{
+				gl_buf.idx[idx_ptr]   = vtx_ptr + i;
+				gl_buf.idx[idx_ptr+1] = vtx_ptr + i + 1;
+				gl_buf.idx[idx_ptr+2] = vtx_ptr + i + 2;
+				idx_ptr += 3;
+			}
+			break;
+
 		case GL_TRIANGLE_FAN:
 			for (i = 0; i < vertices_num-2; i++)
 			{
@@ -375,6 +386,7 @@ R_SetBufferIndices(GLenum primitive, GLuint vertices_num)
 				idx_ptr += 3;
 			}
 			break;
+
 		case GL_TRIANGLE_STRIP:
 			for (i = 0; i < vertices_num-2; i++)
 			{
@@ -393,6 +405,7 @@ R_SetBufferIndices(GLenum primitive, GLuint vertices_num)
 				idx_ptr += 3;
 			}
 			break;
+
 		default:
 			Com_DPrintf("%s: no such primitive %d\n", __func__, primitive);
 			return;
