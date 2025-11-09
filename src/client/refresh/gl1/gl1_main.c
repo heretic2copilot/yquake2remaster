@@ -1252,6 +1252,9 @@ R_Register(void)
 	R_InitTemporaryLMBuffer();
 	R_InitCvar();
 
+	/* Initialize tessellation */
+	R_InitTessellation();
+
 	gl1_overbrightbits = ri.Cvar_Get("gl1_overbrightbits", "0", CVAR_ARCHIVE);
 	gl1_particle_min_size = ri.Cvar_Get("gl1_particle_min_size", "2", CVAR_ARCHIVE);
 	gl1_particle_max_size = ri.Cvar_Get("gl1_particle_max_size", "40", CVAR_ARCHIVE);

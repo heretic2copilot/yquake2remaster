@@ -456,4 +456,10 @@ extern void RI_EndRegistration(void);
 extern qboolean RI_IsVSyncActive(void);
 extern void RI_EndFrame(void);
 
+/* gl1_tessellation.c */
+void R_InitTessellation(void);
+int R_TessellateTriangle(const vec3_t v0, const vec3_t v1, const vec3_t v2,
+    const vec3_t n0, const vec3_t n1, const vec3_t n2, 
+    vec3_t *out_vertices, vec3_t *out_normals);
+
 #endif

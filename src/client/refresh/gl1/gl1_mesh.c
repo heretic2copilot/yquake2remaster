@@ -31,6 +31,9 @@ R_DrawAliasDrawCommands(const entity_t *currententity, int *order, const int *or
 	float alpha, dxtrivertx_t *verts, vec4_t *s_lerped, const float *shadelight,
 	const float *shadevector)
 {
+	vec3_t tessVertices[64]; // Max vertices for tessellation level 8
+	vec3_t tessNormals[64];
+
 	while (1)
 	{
 		int count;
@@ -95,48 +98,99 @@ R_DrawAliasDrawCommands(const entity_t *currententity, int *order, const int *or
 				vec3_t normal;
 				float l, tex[2];
 				int idx[3];
+				int num_tess;
 
-				/* texture coordinates come from the draw list */
-				tex[0] = ((float *)order)[0];
-				tex[1] = ((float *)order)[1];
+				// Save original triangle vertices and normals for tessellation
+				vec3_t v0, v1, v2, n0, n1, n2;
 
-				index_xyz = order[2];
-				order += 3;
+				if (count >= 3) {
+					// Get vertex/normal data for tessellation
+					for (i = 0; i < 3; i++) {
+						VectorCopy(s_lerped[order[2]], v0);
+						for (int j = 0; j < 3; j++) {
+							n0[j] = verts[order[2]].normal[j] / 127.0f;
+						}
+						order += 3;
+					}
 
-				/* unpack normal */
-				for(i = 0; i < 3; i++)
-				{
-					normal[i] = verts[index_xyz].normal[i] / 127.f;
-				}
+					// Tessellate the triangle
+					num_tess = R_TessellateTriangle(v0, v1, v2, n0, n1, n2, 
+						tessVertices, tessNormals);
 
-				/* normals and vertexes come from the frame list */
-				/* shadevector is set above according to rotation (around Z axis I think) */
-				l = DotProduct(normal, shadevector) + 1;
+					// Draw tessellated vertices
+					for (i = 0; i < num_tess; i++) {
+						GLBUFFER_VERTEX(tessVertices[i][0], 
+							tessVertices[i][1], 
+							tessVertices[i][2])
 
-				GLBUFFER_VERTEX(s_lerped[index_xyz][0],
-					s_lerped[index_xyz][1], s_lerped[index_xyz][2])
+						l = DotProduct(tessNormals[i], shadevector) + 1;
 
-				GLBUFFER_SINGLETEX(tex[0], tex[1])
+						for (int j = 0; j < 3; j++)
+						{
+							idx[j] = l * shadelight[j] * 255;
+							idx[j] = Q_clamp(idx[j], 0, 255);
+						}
 
-				for (i = 0; i < 3; i++)
-				{
-					idx[i] = l * shadelight[i] * 255;
-					idx[i] = Q_clamp(idx[i], 0, 255);
-				}
+						if (gl_state.minlight_set)
+						{
+							for (int j = 0; j < 3; j++)
+							{
+								idx[j] = minlight[idx[j]];
+							}
+						}
 
-				if (gl_state.minlight_set)
-				{
+						GLBUFFER_COLOR(gammatable[idx[0]],
+							gammatable[idx[1]],
+							gammatable[idx[2]], alpha * 255)
+
+						// Interpolate texture coordinates
+						tex[0] = ((float *)order)[-9];
+						tex[1] = ((float *)order)[-8];
+						GLBUFFER_SINGLETEX(tex[0], tex[1])
+					}
+
+					count -= 3;
+				} else {
+					// Handle remaining vertices
+					tex[0] = ((float *)order)[0];
+					tex[1] = ((float *)order)[1];
+					index_xyz = order[2];
+					order += 3;
+
+					for(i = 0; i < 3; i++)
+					{
+						normal[i] = verts[index_xyz].normal[i] / 127.f;
+					}
+
+					l = DotProduct(normal, shadevector) + 1;
+
+					GLBUFFER_VERTEX(s_lerped[index_xyz][0],
+						s_lerped[index_xyz][1], s_lerped[index_xyz][2])
+
+					GLBUFFER_SINGLETEX(tex[0], tex[1])
+
 					for (i = 0; i < 3; i++)
 					{
-						idx[i] = minlight[idx[i]];
+						idx[i] = l * shadelight[i] * 255;
+						idx[i] = Q_clamp(idx[i], 0, 255);
 					}
-				}
 
-				GLBUFFER_COLOR(gammatable[idx[0]],
-					gammatable[idx[1]],
-					gammatable[idx[2]], alpha * 255)
+					if (gl_state.minlight_set)
+					{
+						for (i = 0; i < 3; i++)
+						{
+							idx[i] = minlight[idx[i]];
+						}
+					}
+
+					GLBUFFER_COLOR(gammatable[idx[0]],
+						gammatable[idx[1]],
+						gammatable[idx[2]], alpha * 255)
+
+					count--;
+				}
 			}
-			while (--count);
+			while (count > 0);
 		}
 	}
 }
