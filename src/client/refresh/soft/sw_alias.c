@@ -624,7 +624,7 @@ static void
 R_AliasSetupLighting(entity_t *currententity)
 {
 	const vec3_t lightvec = {-1, 0, 0};
-	vec3_t light;
+	vec3_t shadelight;
 	int i;
 
 	// all components of light should be identical in software
@@ -632,27 +632,63 @@ R_AliasSetupLighting(entity_t *currententity)
 	{
 		for (i = 0; i < 3; i++)
 		{
-			light[i] = 1.0;
+			shadelight[i] = 1.0;
 		}
 	}
 	else
 	{
 		R_LightPoint(r_worldmodel->grid, currententity, r_worldmodel->surfaces,
-			r_worldmodel->nodes, currententity->origin, light,
+			r_worldmodel->nodes, currententity->origin, shadelight,
 			r_modulate->value, lightspot);
 	}
 
-	// save off light value for server to look at (BIG HACK!)
+	R_ApplyDynamicLight(shadelight, currententity->origin);
+
+	/* player lighting hack for communication back to server */
 	if (currententity->flags & RF_WEAPONMODEL)
 	{
-		r_lightlevel->value = 150.0 * light[0];
+		/* pick the greatest component, which should be
+		   the same as the mono value returned by software */
+		if (shadelight[0] > shadelight[1])
+		{
+			if (shadelight[0] > shadelight[2])
+			{
+				r_lightlevel->value = 150 * shadelight[0];
+			}
+			else
+			{
+				r_lightlevel->value = 150 * shadelight[2];
+			}
+		}
+		else
+		{
+			if (shadelight[1] > shadelight[2])
+			{
+				r_lightlevel->value = 150 * shadelight[1];
+			}
+			else
+			{
+				r_lightlevel->value = 150 * shadelight[2];
+			}
+		}
 	}
 
-	if ( currententity->flags & RF_MINLIGHT )
+	if (currententity->flags & RF_MINLIGHT)
 	{
-		for (i=0 ; i<3 ; i++)
-			if (light[i] < 0.1)
-				light[i] = 0.1;
+		for (i = 0; i < 3; i++)
+		{
+			if (shadelight[i] > 0.1)
+			{
+				break;
+			}
+		}
+
+		if (i == 3)
+		{
+			shadelight[0] = 0.1;
+			shadelight[1] = 0.1;
+			shadelight[2] = 0.1;
+		}
 	}
 
 	if ( currententity->flags & RF_GLOW )
@@ -660,29 +696,31 @@ R_AliasSetupLighting(entity_t *currententity)
 		float	scale;
 
 		scale = 0.1 * sin(r_newrefdef.time*7);
-		for (i=0 ; i<3 ; i++)
+		for (i = 0; i < 3; i++)
 		{
 			float min;
 
-			min = light[i] * 0.8;
-			light[i] += scale;
-			if (light[i] < min)
-				light[i] = min;
+			min = shadelight[i] * 0.8;
+			shadelight[i] += scale;
+			if (shadelight[i] < min)
+			{
+				shadelight[i] = min;
+			}
 		}
 	}
 
 	if (sw_colorlight->value == 0)
 	{
-		float temp = (light[0] + light[1] + light[2]) / 3.0;
+		float temp = (shadelight[0] + shadelight[1] + shadelight[2]) / 3.0;
 
-		light[0] = light[1] = light[2] = temp;
+		shadelight[0] = shadelight[1] = shadelight[2] = temp;
 	}
 
-	for (i=0; i<3; i++)
+	for (i = 0; i < 3; i++)
 	{
 		int j;
 
-		j = light[i] * 255;
+		j = shadelight[i] * 255;
 
 		r_ambientlight[i] = j;
 		r_shadelight[i] = j;

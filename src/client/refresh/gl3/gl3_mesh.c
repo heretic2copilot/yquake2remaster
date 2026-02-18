@@ -564,6 +564,8 @@ GL3_DrawAliasModel(entity_t *entity)
 				entity->origin, shadelight, r_modulate->value, lightspot);
 		}
 
+		R_ApplyDynamicLight(shadelight, entity->origin);
+
 		/* player lighting hack for communication back to server */
 		if (entity->flags & RF_WEAPONMODEL)
 		{

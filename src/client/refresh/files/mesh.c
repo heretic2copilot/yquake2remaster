@@ -300,3 +300,48 @@ R_GenStripIndexes(unsigned short *data, unsigned from, unsigned to)
 		data ++;
 	}
 }
+
+void
+R_ApplyDynamicLight(float *shadelight, const vec3_t origin)
+{
+	/* add dynamic (dlight) contributions from refdef dlights so
+	 * entity models receive flashlight/dlight effects (uniform add)
+	 * Note: per-vertex dlighting would be better, but this is a
+	 * minimal fix for GL1 to make entities visibly affected. */
+	if (r_newrefdef.num_dlights > 0)
+	{
+		int i;
+
+		for (i = 0; i < r_newrefdef.num_dlights; i++)
+		{
+			float dist, influence;
+			const dlight_t *dl;
+			vec3_t diff;
+
+			dl = r_newrefdef.dlights + i;
+
+			VectorSubtract(origin, dl->origin, diff);
+			dist = VectorLength(diff);
+
+			if (dist <= 0.0f)
+			{
+				influence = 1.0f;
+			}
+			else if (dist < dl->intensity)
+			{
+				influence = (dl->intensity - dist) / dl->intensity;
+			}
+			else
+			{
+				influence = 0.0f;
+			}
+
+			if (influence > 0.0f)
+			{
+				shadelight[0] += dl->color[0] * influence;
+				shadelight[1] += dl->color[1] * influence;
+				shadelight[2] += dl->color[2] * influence;
+			}
+		}
+	}
+}

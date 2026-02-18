@@ -460,6 +460,8 @@ extern cvar_t *vid_gamma;
 extern cvar_t *viewsize;
 
 extern void R_CombineBlendWithFog(float *v_blend, qboolean native_fog);
+extern void R_ApplyDynamicLight(float *shadelight, const vec3_t origin);
+
 extern void R_InitCvar(void);
 
 #endif /* SRC_CLIENT_REFRESH_REF_SHARED_H_ */
