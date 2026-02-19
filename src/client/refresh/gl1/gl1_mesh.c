@@ -371,6 +371,8 @@ R_DrawAliasModel(entity_t *currententity, const model_t *currentmodel)
 		}
 	}
 
+	paliashdr = (dmdx_t *)currentmodel->extradata;
+
 	for (i = 0; i < 3; i++)
 	{
 		/* fix scale */
@@ -379,8 +381,6 @@ R_DrawAliasModel(entity_t *currententity, const model_t *currentmodel)
 			currententity->scale[i] = 1.0f;
 		}
 	}
-
-	paliashdr = (dmdx_t *)currentmodel->extradata;
 
 	/* get lighting information */
 	if (currententity->flags &
