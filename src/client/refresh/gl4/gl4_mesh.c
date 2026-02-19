@@ -468,7 +468,7 @@ CullAliasModel(vec3_t bbox[8], entity_t *e)
 }
 
 void
-GL4_DrawAliasModel(entity_t *entity)
+GL4_DrawAliasModel(entity_t *currententity)
 {
 	int i;
 	dmdx_t *paliashdr;
@@ -481,15 +481,15 @@ GL4_DrawAliasModel(entity_t *entity)
 	// used to restore ModelView matrix after changing it for this entities position/rotation
 	hmm_mat4 origModelMat = {0};
 
-	if (!(entity->flags & RF_WEAPONMODEL))
+	if (!(currententity->flags & RF_WEAPONMODEL))
 	{
-		if (CullAliasModel(bbox, entity))
+		if (CullAliasModel(bbox, currententity))
 		{
 			return;
 		}
 	}
 
-	if (entity->flags & RF_WEAPONMODEL)
+	if (currententity->flags & RF_WEAPONMODEL)
 	{
 		if (r_lefthand->value == 2)
 		{
@@ -497,54 +497,54 @@ GL4_DrawAliasModel(entity_t *entity)
 		}
 	}
 
+	gl4model_t* model = currententity->model;
+	paliashdr = (dmdx_t *)model->extradata;
+
 	for (i = 0; i < 3; i++)
 	{
 		/* fix scale */
-		if (!entity->scale[i])
+		if (!currententity->scale[i])
 		{
-			entity->scale[i] = 1.0f;
+			currententity->scale[i] = 1.0f;
 		}
 	}
 
-	gl4model_t* model = entity->model;
-	paliashdr = (dmdx_t *)model->extradata;
-
 	/* get lighting information */
-	if (entity->flags &
+	if (currententity->flags &
 		(RF_SHELL_HALF_DAM | RF_SHELL_GREEN | RF_SHELL_RED |
 		 RF_SHELL_BLUE | RF_SHELL_DOUBLE))
 	{
 		VectorClear(shadelight);
 
-		if (entity->flags & RF_SHELL_HALF_DAM)
+		if (currententity->flags & RF_SHELL_HALF_DAM)
 		{
 			shadelight[0] = 0.56;
 			shadelight[1] = 0.59;
 			shadelight[2] = 0.45;
 		}
 
-		if (entity->flags & RF_SHELL_DOUBLE)
+		if (currententity->flags & RF_SHELL_DOUBLE)
 		{
 			shadelight[0] = 0.9;
 			shadelight[1] = 0.7;
 		}
 
-		if (entity->flags & RF_SHELL_RED)
+		if (currententity->flags & RF_SHELL_RED)
 		{
 			shadelight[0] = 1.0;
 		}
 
-		if (entity->flags & RF_SHELL_GREEN)
+		if (currententity->flags & RF_SHELL_GREEN)
 		{
 			shadelight[1] = 1.0;
 		}
 
-		if (entity->flags & RF_SHELL_BLUE)
+		if (currententity->flags & RF_SHELL_BLUE)
 		{
 			shadelight[2] = 1.0;
 		}
 	}
-	else if (entity->flags & RF_FULLBRIGHT)
+	else if (currententity->flags & RF_FULLBRIGHT)
 	{
 		for (i = 0; i < 3; i++)
 		{
@@ -559,15 +559,15 @@ GL4_DrawAliasModel(entity_t *entity)
 		}
 		else
 		{
-			R_LightPoint(gl4_worldmodel->grid, entity,
+			R_LightPoint(gl4_worldmodel->grid, currententity,
 				gl4_worldmodel->surfaces, gl4_worldmodel->nodes,
-				entity->origin, shadelight, r_modulate->value, lightspot);
+				currententity->origin, shadelight, r_modulate->value, lightspot);
 		}
 
-		R_ApplyDynamicLight(shadelight, entity->origin);
+		R_ApplyDynamicLight(shadelight, currententity->origin);
 
 		/* player lighting hack for communication back to server */
-		if (entity->flags & RF_WEAPONMODEL)
+		if (currententity->flags & RF_WEAPONMODEL)
 		{
 			/* pick the greatest component, which should be
 			   the same as the mono value returned by software */
@@ -596,7 +596,7 @@ GL4_DrawAliasModel(entity_t *entity)
 		}
 	}
 
-	if (entity->flags & RF_MINLIGHT)
+	if (currententity->flags & RF_MINLIGHT)
 	{
 		for (i = 0; i < 3; i++)
 		{
@@ -614,7 +614,7 @@ GL4_DrawAliasModel(entity_t *entity)
 		}
 	}
 
-	if (entity->flags & RF_GLOW)
+	if (currententity->flags & RF_GLOW)
 	{
 		/* bonus items will pulse with time */
 		float scale;
@@ -638,14 +638,14 @@ GL4_DrawAliasModel(entity_t *entity)
 	// Note: gl_overbrightbits are now applied in shader.
 
 	/* ir goggles color override */
-	if ((r_newrefdef.rdflags & RDF_IRGOGGLES) && (entity->flags & RF_IR_VISIBLE))
+	if ((r_newrefdef.rdflags & RDF_IRGOGGLES) && (currententity->flags & RF_IR_VISIBLE))
 	{
 		shadelight[0] = 1.0;
 		shadelight[1] = 0.0;
 		shadelight[2] = 0.0;
 	}
 
-	an = entity->angles[1] / 180 * M_PI;
+	an = currententity->angles[1] / 180 * M_PI;
 	shadevector[0] = cos(-an);
 	shadevector[1] = sin(-an);
 	shadevector[2] = 1;
@@ -655,13 +655,13 @@ GL4_DrawAliasModel(entity_t *entity)
 	c_alias_polys += paliashdr->num_tris;
 
 	/* draw all the triangles */
-	if (entity->flags & RF_DEPTHHACK)
+	if (currententity->flags & RF_DEPTHHACK)
 	{
 		/* hack the depth range to prevent view model from poking into walls */
 		glDepthRange(gl4depthmin, gl4depthmin + 0.3 * (gl4depthmax - gl4depthmin));
 	}
 
-	if (entity->flags & RF_WEAPONMODEL)
+	if (currententity->flags & RF_WEAPONMODEL)
 	{
 		extern hmm_mat4 GL4_SetPerspective(GLdouble fovy);
 
@@ -689,20 +689,20 @@ GL4_DrawAliasModel(entity_t *entity)
 	//glPushMatrix();
 	origModelMat = gl4state.uni3DData.transModelMat4;
 
-	entity->angles[PITCH] = -entity->angles[PITCH];
-	GL4_RotateForEntity(entity);
-	entity->angles[PITCH] = -entity->angles[PITCH];
+	currententity->angles[PITCH] = -currententity->angles[PITCH];
+	GL4_RotateForEntity(currententity);
+	currententity->angles[PITCH] = -currententity->angles[PITCH];
 
 	/* select skin */
-	if (entity->skin)
+	if (currententity->skin)
 	{
-		skin = entity->skin; /* custom player skin */
+		skin = currententity->skin; /* custom player skin */
 	}
 	else
 	{
-		if (entity->skinnum < model->numskins)
+		if (currententity->skinnum < model->numskins)
 		{
-			skin = model->skins[entity->skinnum];
+			skin = model->skins[currententity->skinnum];
 		}
 
 		if (!skin && model->numskins)
@@ -718,61 +718,62 @@ GL4_DrawAliasModel(entity_t *entity)
 
 	GL4_Bind(skin->texnum);
 
-	if (entity->flags & RF_TRANSLUCENT)
+	if (currententity->flags & RF_TRANSLUCENT)
 	{
 		glEnable(GL_BLEND);
 	}
 
-
-	if ((entity->frame >= paliashdr->num_frames) ||
-		(entity->frame < 0))
+	if ((currententity->frame >= paliashdr->num_frames) ||
+		(currententity->frame < 0))
 	{
 		Com_DPrintf("%s %s: no such frame %d\n",
-				__func__, model->name, entity->frame);
-		entity->frame = 0;
-		entity->oldframe = 0;
+				__func__, model->name, currententity->frame);
+		currententity->frame = 0;
+		currententity->oldframe = 0;
 	}
 
-	if ((entity->oldframe >= paliashdr->num_frames) ||
-		(entity->oldframe < 0))
+	if ((currententity->oldframe >= paliashdr->num_frames) ||
+		(currententity->oldframe < 0))
 	{
 		Com_DPrintf("%s %s: no such oldframe %d\n",
-				__func__, model->name, entity->oldframe);
-		entity->frame = 0;
-		entity->oldframe = 0;
+				__func__, model->name, currententity->oldframe);
+		currententity->frame = 0;
+		currententity->oldframe = 0;
 	}
 
-	DrawAliasFrameLerp(paliashdr, entity, shadelight, shadevector);
+	DrawAliasFrameLerp(paliashdr, currententity, shadelight, shadevector);
 
 	//glPopMatrix();
 	gl4state.uni3DData.transModelMat4 = origModelMat;
 	GL4_UpdateUBO3D();
 
-	if (entity->flags & RF_WEAPONMODEL)
+	if (currententity->flags & RF_WEAPONMODEL)
 	{
 		gl4state.uni3DData.transProjViewMat4 = origProjViewMat;
 		GL4_UpdateUBO3D();
 		if (r_lefthand->value == 1.0F)
+		{
 			glCullFace(GL_FRONT);
+		}
 	}
 
-	if (entity->flags & RF_TRANSLUCENT)
+	if (currententity->flags & RF_TRANSLUCENT)
 	{
 		glDisable(GL_BLEND);
 	}
 
-	if (entity->flags & RF_DEPTHHACK)
+	if (currententity->flags & RF_DEPTHHACK)
 	{
 		glDepthRange(gl4depthmin, gl4depthmax);
 	}
 
-	if (r_shadows->value && gl4config.stencil && !(entity->flags & (RF_TRANSLUCENT | RF_WEAPONMODEL | RF_NOSHADOW)))
+	if (r_shadows->value && gl4config.stencil && !(currententity->flags & (RF_TRANSLUCENT | RF_WEAPONMODEL | RF_NOSHADOW)))
 	{
 		gl4_shadowinfo_t si = {0};
 		VectorCopy(lightspot, si.lightspot);
 		VectorCopy(shadevector, si.shadevector);
 		si.paliashdr = paliashdr;
-		si.entity = entity;
+		si.entity = currententity;
 
 		da_push(shadowModels, si);
 	}

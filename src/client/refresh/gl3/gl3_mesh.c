@@ -723,7 +723,6 @@ GL3_DrawAliasModel(entity_t *currententity)
 		glEnable(GL_BLEND);
 	}
 
-
 	if ((currententity->frame >= paliashdr->num_frames) ||
 		(currententity->frame < 0))
 	{
@@ -753,7 +752,9 @@ GL3_DrawAliasModel(entity_t *currententity)
 		gl3state.uni3DData.transProjViewMat4 = origProjViewMat;
 		GL3_UpdateUBO3D();
 		if (r_lefthand->value == 1.0F)
+		{
 			glCullFace(GL_FRONT);
+		}
 	}
 
 	if (currententity->flags & RF_TRANSLUCENT)
