@@ -561,10 +561,8 @@ GL4_DrawAliasModel(entity_t *currententity)
 		{
 			R_LightPoint(gl4_worldmodel->grid, currententity,
 				gl4_worldmodel->surfaces, gl4_worldmodel->nodes,
-				currententity->origin, shadelight, r_modulate->value, lightspot);
+				currententity->origin, shadelight, lightspot);
 		}
-
-		R_ApplyDynamicLight(shadelight, currententity->origin);
 
 		/* player lighting hack for communication back to server */
 		if (currententity->flags & RF_WEAPONMODEL)

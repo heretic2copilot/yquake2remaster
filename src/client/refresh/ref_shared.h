@@ -393,8 +393,8 @@ extern void R_GenStripIndexes(unsigned short *data, unsigned from, unsigned to);
 /* Lights logic */
 extern bspxlightgrid_t *Mod_LoadBSPXLightGrid(const bspx_header_t *bspx_header, const byte *mod_base);
 extern void R_LightPoint(const bspxlightgrid_t *grid, const entity_t *currententity,
-	const msurface_t *surfaces, const mnode_t *nodes, vec3_t p, vec3_t color,
-	float modulate, vec3_t lightspot);
+	const msurface_t *surfaces, const mnode_t *nodes, const vec3_t p, vec3_t color,
+	vec3_t lightspot);
 extern void R_SetCacheState(msurface_t *surf, const refdef_t *r_newrefdef);
 extern void R_BuildLightMap(const msurface_t *surf, byte *dest, int stride,
 	const refdef_t *r_newrefdef, float modulate, int r_framecount,
@@ -460,7 +460,6 @@ extern cvar_t *vid_gamma;
 extern cvar_t *viewsize;
 
 extern void R_CombineBlendWithFog(float *v_blend, qboolean native_fog);
-extern void R_ApplyDynamicLight(float *shadelight, const vec3_t origin);
 
 extern void R_InitCvar(void);
 

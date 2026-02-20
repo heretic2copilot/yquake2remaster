@@ -606,10 +606,8 @@ R_DrawAliasModel(entity_t *currententity, const model_t *currentmodel)
 		{
 			R_LightPoint(r_worldmodel->grid, currententity, r_worldmodel->surfaces,
 				r_worldmodel->nodes, currententity->origin, shadelight,
-				r_modulate->value, lightspot);
+				lightspot);
 		}
-
-		R_ApplyDynamicLight(shadelight, currententity->origin);
 
 		/* player lighting hack for communication back to server */
 		if (currententity->flags & RF_WEAPONMODEL)
