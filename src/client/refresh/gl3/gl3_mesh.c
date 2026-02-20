@@ -509,128 +509,15 @@ GL3_DrawAliasModel(entity_t *currententity)
 		}
 	}
 
-	/* get lighting information */
-	if (currententity->flags &
-		(RF_SHELL_HALF_DAM | RF_SHELL_GREEN | RF_SHELL_RED |
-		 RF_SHELL_BLUE | RF_SHELL_DOUBLE))
+	if (gl3_worldmodel)
 	{
-		VectorClear(shadelight);
-
-		if (currententity->flags & RF_SHELL_HALF_DAM)
-		{
-			shadelight[0] = 0.56;
-			shadelight[1] = 0.59;
-			shadelight[2] = 0.45;
-		}
-
-		if (currententity->flags & RF_SHELL_DOUBLE)
-		{
-			shadelight[0] = 0.9;
-			shadelight[1] = 0.7;
-		}
-
-		if (currententity->flags & RF_SHELL_RED)
-		{
-			shadelight[0] = 1.0;
-		}
-
-		if (currententity->flags & RF_SHELL_GREEN)
-		{
-			shadelight[1] = 1.0;
-		}
-
-		if (currententity->flags & RF_SHELL_BLUE)
-		{
-			shadelight[2] = 1.0;
-		}
-	}
-	else if (currententity->flags & RF_FULLBRIGHT)
-	{
-		for (i = 0; i < 3; i++)
-		{
-			shadelight[i] = 1.0;
-		}
+		R_ApplyModelLight(gl3_worldmodel->grid, currententity, gl3_worldmodel->surfaces,
+			gl3_worldmodel->nodes, shadelight, lightspot, gl3_worldmodel->lightdata);
 	}
 	else
 	{
-		if (!gl3_worldmodel || !gl3_worldmodel->lightdata)
-		{
-			shadelight[0] = shadelight[1] = shadelight[2] = 1.0F;
-		}
-		else
-		{
-			R_LightPoint(gl3_worldmodel->grid, currententity,
-				gl3_worldmodel->surfaces, gl3_worldmodel->nodes,
-				currententity->origin, shadelight, lightspot);
-		}
-
-		/* player lighting hack for communication back to server */
-		if (currententity->flags & RF_WEAPONMODEL)
-		{
-			/* pick the greatest component, which should be
-			   the same as the mono value returned by software */
-			if (shadelight[0] > shadelight[1])
-			{
-				if (shadelight[0] > shadelight[2])
-				{
-					r_lightlevel->value = 150 * shadelight[0];
-				}
-				else
-				{
-					r_lightlevel->value = 150 * shadelight[2];
-				}
-			}
-			else
-			{
-				if (shadelight[1] > shadelight[2])
-				{
-					r_lightlevel->value = 150 * shadelight[1];
-				}
-				else
-				{
-					r_lightlevel->value = 150 * shadelight[2];
-				}
-			}
-		}
-	}
-
-	if (currententity->flags & RF_MINLIGHT)
-	{
-		for (i = 0; i < 3; i++)
-		{
-			if (shadelight[i] > 0.1)
-			{
-				break;
-			}
-		}
-
-		if (i == 3)
-		{
-			shadelight[0] = 0.1;
-			shadelight[1] = 0.1;
-			shadelight[2] = 0.1;
-		}
-	}
-
-	if (currententity->flags & RF_GLOW)
-	{
-		/* bonus items will pulse with time */
-		float scale;
-
-		scale = 0.1 * sin(r_newrefdef.time * 7);
-
-		for (i = 0; i < 3; i++)
-		{
-			float	min;
-
-			min = shadelight[i] * 0.8;
-			shadelight[i] += scale;
-
-			if (shadelight[i] < min)
-			{
-				shadelight[i] = min;
-			}
-		}
+		R_ApplyModelLight(NULL, currententity, NULL, NULL, shadelight,
+			lightspot, NULL);
 	}
 
 	// Note: gl_overbrightbits are now applied in shader.
