@@ -627,84 +627,15 @@ R_AliasSetupLighting(entity_t *currententity)
 	vec3_t shadelight;
 	int i;
 
-	// all components of light should be identical in software
-	if (currententity->flags & RF_FULLBRIGHT || !r_worldmodel || !r_worldmodel->lightdata)
+	if (r_worldmodel)
 	{
-		for (i = 0; i < 3; i++)
-		{
-			shadelight[i] = 1.0;
-		}
+		R_ApplyModelLight(r_worldmodel->grid, currententity, r_worldmodel->surfaces,
+			r_worldmodel->nodes, shadelight, lightspot, r_worldmodel->lightdata);
 	}
 	else
 	{
-		R_LightPoint(r_worldmodel->grid, currententity, r_worldmodel->surfaces,
-			r_worldmodel->nodes, currententity->origin, shadelight,
-			lightspot);
-	}
-
-	/* player lighting hack for communication back to server */
-	if (currententity->flags & RF_WEAPONMODEL)
-	{
-		/* pick the greatest component, which should be
-		   the same as the mono value returned by software */
-		if (shadelight[0] > shadelight[1])
-		{
-			if (shadelight[0] > shadelight[2])
-			{
-				r_lightlevel->value = 150 * shadelight[0];
-			}
-			else
-			{
-				r_lightlevel->value = 150 * shadelight[2];
-			}
-		}
-		else
-		{
-			if (shadelight[1] > shadelight[2])
-			{
-				r_lightlevel->value = 150 * shadelight[1];
-			}
-			else
-			{
-				r_lightlevel->value = 150 * shadelight[2];
-			}
-		}
-	}
-
-	if (currententity->flags & RF_MINLIGHT)
-	{
-		for (i = 0; i < 3; i++)
-		{
-			if (shadelight[i] > 0.1)
-			{
-				break;
-			}
-		}
-
-		if (i == 3)
-		{
-			shadelight[0] = 0.1;
-			shadelight[1] = 0.1;
-			shadelight[2] = 0.1;
-		}
-	}
-
-	if ( currententity->flags & RF_GLOW )
-	{	// bonus items will pulse with time
-		float	scale;
-
-		scale = 0.1 * sin(r_newrefdef.time*7);
-		for (i = 0; i < 3; i++)
-		{
-			float min;
-
-			min = shadelight[i] * 0.8;
-			shadelight[i] += scale;
-			if (shadelight[i] < min)
-			{
-				shadelight[i] = min;
-			}
-		}
+		R_ApplyModelLight(NULL, currententity, NULL, NULL, shadelight,
+			lightspot, NULL);
 	}
 
 	if (sw_colorlight->value == 0)
