@@ -165,7 +165,7 @@ Mesh_Free(void)
 }
 
 static void
-Vk_DrawAliasFrameLerpCommands(int *order, int *order_end, float alpha,
+Vk_DrawAliasFrameLerpCommands(int *order, const int *order_end, float alpha,
 	dxtrivertx_t *verts, vec4_t *s_lerped, const float *shadelight,
 	const float *shadevector, qboolean iscolor, int *vertIdx,
 	int *firstVertex, int *index_pos)
@@ -313,7 +313,8 @@ Vk_DrawAliasFrameLerp(entity_t *currententity, dmdx_t *paliashdr, float backlerp
 	int *index_pos, VkBuffer **buffer, VkDeviceSize *dstOffset)
 {
 	daliasxframe_t *frame, *oldframe;
-	dxtrivertx_t *ov, *verts;
+	const dxtrivertx_t *ov;
+	dxtrivertx_t *verts;
 	int *order;
 	float frontlerp;
 	float alpha;
@@ -424,7 +425,7 @@ Vk_DrawAliasFrameLerp(entity_t *currententity, dmdx_t *paliashdr, float backlerp
 }
 
 static void
-Vk_DrawAliasShadow(int *order, int *order_end, float height, float lheight,
+Vk_DrawAliasShadow(int *order, const int *order_end, float height, float lheight,
 	vec4_t *s_lerped, const float *shadevector,
 	int *vertIdx)
 {
@@ -714,7 +715,7 @@ R_DrawAliasModel(entity_t *currententity, const model_t *currentmodel)
 
 	if (r_shadows->value && !(currententity->flags & (RF_TRANSLUCENT | RF_WEAPONMODEL)))
 	{
-		int num_mesh_nodes, i;
+		int num_mesh_nodes, m;
 		dmdxmesh_t *mesh_nodes;
 		float height, lheight;
 		int *order;
@@ -730,12 +731,12 @@ R_DrawAliasModel(entity_t *currententity, const model_t *currentmodel)
 		lheight = currententity->origin[2] - lightspot[2];
 		height = -lheight + 1.0;
 
-		for (i = 0; i < num_mesh_nodes; i++)
+		for (m = 0; m < num_mesh_nodes; m++)
 		{
 			Vk_DrawAliasShadow(
-				order + mesh_nodes[i].ofs_glcmds,
+				order + mesh_nodes[m].ofs_glcmds,
 				order + Q_min(paliashdr->num_glcmds,
-					mesh_nodes[i].ofs_glcmds + mesh_nodes[i].num_glcmds),
+					mesh_nodes[m].ofs_glcmds + mesh_nodes[m].num_glcmds),
 				height, lheight, s_lerped, shadevector,
 				&vertIdx);
 		}

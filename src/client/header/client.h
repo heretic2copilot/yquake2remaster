@@ -471,7 +471,7 @@ struct model_s *CL_PowerScreenModel(void);
 
 void CL_SetSky(void);
 void CL_PrepRefresh(void);
-void CL_LoadShadowLight(int index, const char *s);
+void CL_LoadShadowLight(int idx, const char *s);
 void CL_RegisterSounds(void);
 
 void CL_Quit_f(void);

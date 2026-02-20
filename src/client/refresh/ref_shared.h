@@ -398,10 +398,10 @@ extern void R_LightPoint(const bspxlightgrid_t *grid, const entity_t *currentent
 extern void R_ApplyModelLight(const bspxlightgrid_t *grid, const entity_t *currententity,
 	const msurface_t *surfaces, const mnode_t *nodes, vec3_t shadelight,
 	vec3_t lightspot, const byte *lightdata);
-extern void R_SetCacheState(msurface_t *surf, const refdef_t *r_newrefdef);
+extern void R_SetCacheState(msurface_t *surf, const refdef_t *refdef);
 extern void R_BuildLightMap(const msurface_t *surf, byte *dest, int stride,
 	const refdef_t *r_newrefdef, float modulate, int r_framecount,
-	byte *gammatable, byte *minlight);
+	const byte *gammatable, const byte *minlight);
 extern void R_InitTemporaryLMBuffer(void);
 extern void R_FreeTemporaryLMBuffer(void);
 extern byte *R_GetTemporaryLMBuffer(size_t size);

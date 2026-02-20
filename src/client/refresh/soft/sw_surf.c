@@ -180,7 +180,7 @@ R_DrawSurface
 ===============
 */
 static void
-R_DrawSurface (drawsurf_t *drawsurf, light_t *blocklights, light_t *blocklight_max)
+R_DrawSurface (drawsurf_t *drawsurf, light_t *blocklights, const light_t *blocklight_max)
 {
 	unsigned char	*basetptr;
 	int		smax, tmax, twidth;

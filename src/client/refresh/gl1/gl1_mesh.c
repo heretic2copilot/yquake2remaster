@@ -226,11 +226,11 @@ static void
 R_DrawAliasShadowCommand(const entity_t *currententity, int *order, const int *order_end,
 	float height, float lheight, vec4_t *s_lerped, const float *shadevector)
 {
-	vec3_t point;
-	int count;
-
 	while (1)
 	{
+		vec3_t point;
+		int count;
+
 		/* get the vertex count and primitive type */
 		count = *order++;
 

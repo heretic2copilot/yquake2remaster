@@ -230,8 +230,8 @@ R_LightPoint(const bspxlightgrid_t *grid, const entity_t *currententity,
 	const msurface_t *surfaces, const mnode_t *nodes,
 	const vec3_t p, vec3_t color, vec3_t lightspot)
 {
-	vec3_t end, dist, pointcolor = {0, 0, 0};
-	float r, modulate;
+	vec3_t dist, pointcolor = {0, 0, 0};
+	float modulate;
 	int lnum;
 	dlight_t *dl;
 
@@ -250,6 +250,9 @@ R_LightPoint(const bspxlightgrid_t *grid, const entity_t *currententity,
 	}
 	else
 	{
+		vec3_t end;
+		float r;
+
 		end[0] = p[0];
 		end[1] = p[1];
 		end[2] = p[2] - 2048;
@@ -634,8 +637,8 @@ R_GetTemporaryLMBuffer(size_t size)
 }
 
 static void
-R_StoreLightMap(byte *dest, int stride, int smax, int tmax, byte *gammatable,
-	byte *minlight)
+R_StoreLightMap(byte *dest, int stride, int smax, int tmax, const byte *gammatable,
+	const byte *minlight)
 {
 	float *bl;
 	int i;
@@ -738,11 +741,11 @@ R_StoreLightMap(byte *dest, int stride, int smax, int tmax, byte *gammatable,
  */
 void
 R_BuildLightMap(const msurface_t *surf, byte *dest, int stride, const refdef_t *r_newrefdef,
-	float modulate, int r_framecount, byte *gammatable, byte *minlight)
+	float modulate, int r_framecount, const byte *gammatable, const byte *minlight)
 {
 	int smax, tmax;
 	int size, numlightmaps;
-	byte *lightmap;
+	const byte *lightmap;
 	const float *max_light;
 
 	if (surf->texinfo->flags &

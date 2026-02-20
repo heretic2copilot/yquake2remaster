@@ -58,7 +58,7 @@ GL4_ShutdownMeshes(void)
 
 static void
 DrawAliasFrameLerpCommands(dmdx_t *paliashdr, entity_t* entity, vec3_t shadelight,
-	int *order, int *order_end, float alpha, qboolean colorOnly,
+	int *order, const int *order_end, float alpha, qboolean colorOnly,
 	dxtrivertx_t *verts, vec4_t *s_lerped, const float *shadevector)
 {
 	// all the triangle fans and triangle strips of this model will be converted to
@@ -125,7 +125,7 @@ DrawAliasFrameLerpCommands(dmdx_t *paliashdr, entity_t* entity, vec3_t shadeligh
 			for (i = 0; i < count; ++i)
 			{
 				gl4_alias_vtx_t* cur = &buf[i];
-				int index_xyz, i, j = 0;
+				int index_xyz, n, j = 0;
 				vec3_t normal;
 				float l;
 
@@ -138,9 +138,9 @@ DrawAliasFrameLerpCommands(dmdx_t *paliashdr, entity_t* entity, vec3_t shadeligh
 				order += 3;
 
 				/* unpack normal */
-				for (i = 0; i < 3; i++)
+				for (n = 0; n < 3; n++)
 				{
-					normal[i] = verts[index_xyz].normal[i] / 127.f;
+					normal[n] = verts[index_xyz].normal[n] / 127.f;
 				}
 
 				/* normals and vertexes come from the frame list */
@@ -186,7 +186,8 @@ DrawAliasFrameLerp(dmdx_t *paliashdr, entity_t* entity, vec3_t shadelight,
 	const float *shadevector)
 {
 	daliasxframe_t *frame, *oldframe;
-	dxtrivertx_t *ov, *verts;
+	const dxtrivertx_t *ov;
+	dxtrivertx_t *verts;
 	int *order;
 	float alpha;
 	vec3_t move, delta, vectors[3];
@@ -285,7 +286,7 @@ DrawAliasFrameLerp(dmdx_t *paliashdr, entity_t* entity, vec3_t shadelight,
 }
 
 static void
-DrawAliasShadowCommands(int *order, int *order_end, const float *shadevector,
+DrawAliasShadowCommands(int *order, const int *order_end, const float *shadevector,
 	float height, float lheight, vec4_t *s_lerped)
 {
 	// GL1 uses alpha 0.5, but in GL4 0.6 looks better and more true to vanilla
@@ -385,7 +386,7 @@ DrawAliasShadow(gl4_shadowinfo_t* shadowInfo)
 	// all in this scope is to set s_lerped
 	{
 		daliasxframe_t *frame, *oldframe;
-		dxtrivertx_t *ov, *verts;
+		const dxtrivertx_t *ov, *verts;
 		float backlerp = entity->backlerp;
 		float frontlerp = 1.0f - backlerp;
 		vec3_t move, delta, vectors[3];
@@ -473,16 +474,17 @@ GL4_DrawAliasModel(entity_t *currententity)
 	int i;
 	dmdx_t *paliashdr;
 	float an;
-	vec3_t bbox[8];
 	vec3_t shadelight;
 	vec3_t shadevector;
-	gl4image_t *skin = NULL;
+	const gl4image_t *skin = NULL;
 	hmm_mat4 origProjViewMat = {0}; // use for left-handed rendering
 	// used to restore ModelView matrix after changing it for this entities position/rotation
 	hmm_mat4 origModelMat = {0};
 
 	if (!(currententity->flags & RF_WEAPONMODEL))
 	{
+		vec3_t bbox[8];
+
 		if (CullAliasModel(bbox, currententity))
 		{
 			return;
@@ -558,12 +560,15 @@ GL4_DrawAliasModel(entity_t *currententity)
 
 		if (r_lefthand->value == 1.0F)
 		{
+			int j;
+
 			// to mirror gun so it's rendered left-handed, just invert X-axis column
 			// of projection matrix
-			for (int i=0; i<4; ++i)
+			for (j = 0; j < 4; ++j)
 			{
-				projMat.Elements[0][i] = - projMat.Elements[0][i];
+				projMat.Elements[0][j] = - projMat.Elements[0][j];
 			}
+
 			//GL4_UpdateUBO3D(); Note: GL4_RotateForEntity() will call this,no need to do it twice before drawing
 
 			glCullFace(GL_BACK);

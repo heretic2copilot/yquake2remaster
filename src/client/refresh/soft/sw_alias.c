@@ -621,7 +621,7 @@ R_AliasSetupLighting
 ================
 */
 static void
-R_AliasSetupLighting(entity_t *currententity)
+R_AliasSetupLighting(const entity_t *currententity)
 {
 	const vec3_t lightvec = {-1, 0, 0};
 	vec3_t shadelight;
