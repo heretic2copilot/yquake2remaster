@@ -41,11 +41,11 @@ Com_Printf(const char *msg, ...)
 }
 
 void
-Com_DPrintf(const char *msg, ...)
+Com_DPrintf(const char *fmt, ...)
 {
 	va_list argptr;
-	va_start(argptr, msg);
-	vprintf(msg, argptr);
+	va_start(argptr, fmt);
+	vprintf(fmt, argptr);
 	va_end(argptr);
 }
 
@@ -61,11 +61,11 @@ Sys_Error(const char *error, ...)
 }
 
 void
-Com_Error(int error_code, const char *error, ...)
+Com_Error(int code, const char *fmt, ...)
 {
 	va_list argptr;
-	va_start(argptr, error);
-	vprintf(error, argptr);
+	va_start(argptr, fmt);
+	vprintf(fmt, argptr);
 	va_end(argptr);
 
 	exit (0);
@@ -296,6 +296,7 @@ read_directory(FILE *fd, int listOnly, int* num_entries)
 	/* Navigate to the directory */
 	if (fseek(fd, header.dir_offset, SEEK_SET))
 	{
+		free(dir);
 		perror("Failed to seek inside input file");
 		return NULL;
 	}
@@ -331,6 +332,7 @@ read_directory(FILE *fd, int listOnly, int* num_entries)
 static void
 extract_compressed(FILE* in, const directory *d)
 {
+	byte *in_buf, *out_buf;
 	FILE *out;
 
 	if ((out = fopen(d->file_name, "w")) == NULL)
@@ -338,9 +340,6 @@ extract_compressed(FILE* in, const directory *d)
 		perror("Couldn't open outputfile");
 		return;
 	}
-
-	byte *in_buf;
-	byte *out_buf;
 
 	if ((in_buf = malloc(d->compressed_length)) == NULL)
 	{

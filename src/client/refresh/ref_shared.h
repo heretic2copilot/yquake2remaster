@@ -336,7 +336,7 @@ extern struct image_s *R_LoadImage(const char *name, const char* namewe, const c
 	imagetype_t type, loadimage_t load_image);
 extern void Mod_LoadQBSPMarksurfaces(const char *name, msurface_t ***marksurfaces,
 	unsigned int *nummarksurfaces, msurface_t *surfaces, int numsurfaces,
-	const byte *mod_base, const lump_t *lMod_LoadQBSPMarksurfaces);
+	const byte *mod_base, const lump_t *l);
 extern void Mod_LoadQBSPNodes(const char *name, cplane_t *planes, int numplanes,
 	mleaf_t *leafs, int numleafs, mnode_t **nodes, int *numnodes, vec3_t mins, vec3_t maxs,
 	const byte *mod_base, const lump_t *l, int ident);

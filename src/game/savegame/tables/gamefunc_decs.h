@@ -45,7 +45,6 @@ extern int check_telefrag ( edict_t * self ) ;
 extern int fixbot_search ( edict_t * self ) ;
 extern int flyer_blocked ( edict_t * self , float dist ) ;
 extern int range ( edict_t * self , edict_t * other ) ;
-extern int stalker_check_lz ( edict_t * self , edict_t * target , vec3_t dest ) ;
 extern int stalker_do_pounce ( edict_t * self , vec3_t dest ) ;
 extern qboolean Boss2_CheckAttack ( edict_t * self ) ;
 extern qboolean CanDamage ( edict_t * targ , edict_t * inflictor ) ;

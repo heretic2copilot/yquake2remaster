@@ -1251,7 +1251,6 @@
 {"stalker_attack_melee", (byte *)stalker_attack_melee},
 {"stalker_attack_ranged", (byte *)stalker_attack_ranged},
 {"stalker_blocked", (byte *)stalker_blocked},
-{"stalker_check_lz", (byte *)stalker_check_lz},
 {"stalker_dead", (byte *)stalker_dead},
 {"stalker_die", (byte *)stalker_die},
 {"stalker_do_pounce", (byte *)stalker_do_pounce},

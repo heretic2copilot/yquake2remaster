@@ -3009,7 +3009,8 @@ FS_BuildGameSpecificSearchPath(const char *dir)
 	}
 
 	// The game was reset to baseq2. Nothing to do here.
-	if (Q_stricmp(dir, BASEDIRNAME) == 0) {
+	if (Q_stricmp(dir, BASEDIRNAME) == 0)
+	{
 		Cvar_FullSet("gamedir", "", CVAR_SERVERINFO | CVAR_NOSET);
 		Cvar_FullSet("game", "", CVAR_LATCH | CVAR_SERVERINFO);
 
@@ -3017,11 +3018,14 @@ FS_BuildGameSpecificSearchPath(const char *dir)
 		// dir of the generic search path.
 		Com_sprintf(path, sizeof(path), "%s/%s", fs_rawPath->path, BASEDIRNAME);
 		Q_strlcpy(fs_gamedir, path, sizeof(fs_gamedir));
-	} else {
+	}
+	else
+	{
 		Cvar_FullSet("gamedir", dir, CVAR_SERVERINFO | CVAR_NOSET);
 		search = fs_rawPath;
 
-		while (search != NULL) {
+		while (search != NULL)
+		{
 			Com_sprintf(path, sizeof(path), "%s/%s", search->path, dir);
 			FS_AddDirToSearchPath(path, search->create);
 

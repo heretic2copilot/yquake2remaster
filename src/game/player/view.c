@@ -486,17 +486,14 @@ SV_CalcGunOffset(edict_t *ent)
 {
 	int i;
 	float delta;
-	static gitem_t *heatbeam;
+	const gitem_t *heatbeam;
 
 	if (!ent)
 	{
 		return;
 	}
 
-	if (!heatbeam)
-	{
-		heatbeam = FindItemByClassname("weapon_plasmabeam");
-	}
+	heatbeam = FindItemByClassname("weapon_plasmabeam");
 
 	/* heatbeam shouldn't bob so the beam looks right */
 	if (ent->client->pers.weapon != heatbeam)
@@ -812,7 +809,6 @@ P_FallingDamage(edict_t *ent)
 {
 	float delta;
 	int damage;
-	vec3_t dir;
 
 	if (!ent)
 	{
@@ -894,6 +890,8 @@ P_FallingDamage(edict_t *ent)
 
 	if (delta > 30)
 	{
+		vec3_t dir;
+
 		if (ent->health > 0)
 		{
 			if (delta >= 55)
@@ -1142,7 +1140,6 @@ P_WorldEffects(void)
 void
 G_SetClientEffects(edict_t *ent)
 {
-	int pa_type;
 	int remaining;
 
 	if (!ent)
@@ -1181,6 +1178,8 @@ G_SetClientEffects(edict_t *ent)
 
 	if (ent->powerarmor_time > level.time)
 	{
+		int pa_type;
+
 		pa_type = PowerArmorType(ent);
 
 		if (pa_type == POWER_ARMOR_SCREEN)
@@ -1308,7 +1307,7 @@ G_SetClientEvent(edict_t *ent)
 void
 G_SetClientSound(edict_t *ent)
 {
-	char *weap;
+	const char *weap;
 
 	if (!ent)
 	{
@@ -1486,8 +1485,6 @@ newanim:
 		}
 		else
 		{
-			int firstframe, lastframe;
-
 			client->anim_priority = ANIM_JUMP;
 
 			firstframe = FRAME_jump1;
