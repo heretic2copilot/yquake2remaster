@@ -35,7 +35,6 @@ extern edict_t * PickCoopTarget ( edict_t * self ) ;
 extern edict_t * SelectFarthestDeathmatchSpawnPoint ( void ) ;
 extern edict_t * SelectRandomDeathmatchSpawnPoint ( void ) ;
 extern float PlayersRangeFromSpot ( edict_t * spot ) ;
-extern float target_angle ( edict_t * self ) ;
 extern int ArmorIndex ( edict_t * ent ) ;
 extern int DBall_ChangeDamage ( edict_t * targ , edict_t * attacker , int damage , int mod ) ;
 extern int DBall_ChangeKnockback ( edict_t * targ , edict_t * attacker , int knockback , int mod ) ;
@@ -44,7 +43,6 @@ extern int Tag_ChangeDamage ( edict_t * targ , edict_t * attacker , int damage ,
 extern int check_telefrag ( edict_t * self ) ;
 extern int fixbot_search ( edict_t * self ) ;
 extern int flyer_blocked ( edict_t * self , float dist ) ;
-extern int range ( edict_t * self , edict_t * other ) ;
 extern int stalker_do_pounce ( edict_t * self , vec3_t dest ) ;
 extern qboolean Boss2_CheckAttack ( edict_t * self ) ;
 extern qboolean CanDamage ( edict_t * targ , edict_t * inflictor ) ;
