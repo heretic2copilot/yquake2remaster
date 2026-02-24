@@ -713,7 +713,6 @@ extern qboolean SV_FilterPacket ( char * from ) ;
 extern void Svcmd_Test_f ( void ) ;
 extern void SP_worldspawn ( edict_t * ent ) ;
 extern void SpawnEntities ( const char * mapname , char * entities , const char * spawnpoint ) ;
-extern void G_FindTeams ( void ) ;
 extern char * ED_NewString ( const char * string ) ;
 extern void ED_CallSpawn ( edict_t * ent ) ;
 extern void G_RunEntity ( edict_t * ent ) ;
