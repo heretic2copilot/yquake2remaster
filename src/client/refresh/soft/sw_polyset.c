@@ -79,7 +79,7 @@ static light3_t	d_lightbasestep, d_lightextrastep;
 static int	d_sfracbasestep, d_tfracbasestep;
 static zvalue_t	d_ziextrastep, d_zibasestep;
 
-void	(*d_pdrawspans)(const entity_t *currententity, spanpackage_t *pspanpackage);
+void	(*d_pdrawspans)(const entity_t *currententity, const spanpackage_t *pspanpackage);
 
 static void R_PolysetSetEdgeTable(void);
 static void R_RasterizeAliasPolySmooth(const entity_t *currententity);
@@ -428,7 +428,7 @@ R_PolysetDrawSpans8
 ================
 */
 void
-R_PolysetDrawSpans8_33(const entity_t *currententity, spanpackage_t *pspanpackage)
+R_PolysetDrawSpans8_33(const entity_t *currententity, const spanpackage_t *pspanpackage)
 {
 	pixel_t		*lpdest;
 	pixel_t		*lptex;
@@ -545,7 +545,7 @@ R_PolysetDrawSpansConstant8_33(const entity_t *currententity, const spanpackage_
 }
 
 void
-R_PolysetDrawSpans8_66(const entity_t *currententity, spanpackage_t *pspanpackage)
+R_PolysetDrawSpans8_66(const entity_t *currententity, const spanpackage_t *pspanpackage)
 {
 	pixel_t		*lpdest;
 	pixel_t		*lptex;
@@ -685,7 +685,7 @@ R_PolysetDrawSpansConstant8_66(const entity_t *currententity, const spanpackage_
 }
 
 void
-R_PolysetDrawSpans8_Opaque (const entity_t *currententity, spanpackage_t *pspanpackage)
+R_PolysetDrawSpans8_Opaque (const entity_t *currententity, const spanpackage_t *pspanpackage)
 {
 	do
 	{
