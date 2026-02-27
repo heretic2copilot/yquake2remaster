@@ -619,10 +619,9 @@ double sqrt(double x);
 vec_t
 VectorLength(const vec3_t v)
 {
-	return sqrtf(
-		(v[0] * v[0]) +
-		(v[1] * v[1]) +
-		(v[2] * v[2]));
+	return sqrtf((v[0] * v[0]) +
+               (v[1] * v[1]) +
+	       (v[2] * v[2]));
 }
 
 void
@@ -1539,7 +1538,6 @@ Info_ValueForKey(const char *s, const char *key)
 void
 Info_RemoveKey(char *s, const char *key)
 {
-	char *kstart;
 	size_t klen;
 
 	if (strchr(key, '\\'))
@@ -1551,6 +1549,7 @@ Info_RemoveKey(char *s, const char *key)
 
 	while (*s != '\0')
 	{
+		const char *kstart;
 		char *start;
 
 		start = s;
