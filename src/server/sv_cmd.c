@@ -175,10 +175,9 @@ SV_DemoMap_f(void)
 static void
 SV_GameMap_f(void)
 {
-	char *map;
+	char *map, mapvalue[MAX_QPATH];
 	int i;
 	edict_t *clent;
-	bitlist_t savedInuse[BITLIST_SIZE(MAX_CLIENTS)];
 
 	if (Cmd_Argc() != 2)
 	{
@@ -186,12 +185,19 @@ SV_GameMap_f(void)
 		return;
 	}
 
-	Com_DPrintf("SV_GameMap(%s)\n", Cmd_Argv(1));
+	if (strlen(Cmd_Argv(1)) >= sizeof(mapvalue))
+	{
+		Com_Printf("gamemap is too long\n");
+		return;
+	}
+
+	Com_DPrintf("%s(%s)\n", __func__, Cmd_Argv(1));
 
 	FS_CreatePath(va("%s/save/current/", FS_Gamedir()));
 
 	/* check for clearing the current savegame */
-	map = Cmd_Argv(1);
+	strcpy(mapvalue, Cmd_Argv(1));
+	map = mapvalue;
 
 	if (map[0] == '*')
 	{
@@ -203,6 +209,8 @@ SV_GameMap_f(void)
 		/* save the map just exited */
 		if (sv.state == ss_game)
 		{
+			bitlist_t savedInuse[BITLIST_SIZE(MAX_CLIENTS)];
+
 			/* clear all the client inuse flags before saving so that
 			   when the level is re-entered, the clients will spawn
 			   at spawn points instead of occupying body shells */
@@ -242,7 +250,8 @@ SV_GameMap_f(void)
 	char mapPath[MAX_QPATH];
 	{
 		qboolean haveStar = (map[0] == '*');
-		snprintf(mapPath, sizeof(mapPath), "maps/%s.bsp", haveStar ? map+1 : map);
+		Com_sprintf(mapPath, sizeof(mapPath), "maps/%s.bsp",
+			haveStar ? map + 1 : map);
 
 		fileHandle_t f = -1;
 		if(FS_FOpenFile(mapPath, &f, false) >= 0)
@@ -261,7 +270,6 @@ SV_GameMap_f(void)
 			map[strlen(map)-4] = '\0'; // cut off ".bsp"
 		}
 	}
-
 
 	/* start up the next map */
 	SV_Map(false, map, false, false);

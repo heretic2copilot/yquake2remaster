@@ -712,7 +712,6 @@
 {"Svcmd_Test_f", (byte *)Svcmd_Test_f},
 {"SP_worldspawn", (byte *)SP_worldspawn},
 {"SpawnEntities", (byte *)SpawnEntities},
-{"G_FindTeams", (byte *)G_FindTeams},
 {"ED_NewString", (byte *)ED_NewString},
 {"ED_CallSpawn", (byte *)ED_CallSpawn},
 {"G_RunEntity", (byte *)G_RunEntity},
