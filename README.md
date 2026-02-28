@@ -190,6 +190,8 @@ Note:
 * Dawn of Darkness:
   * Docs: <https://www.moddb.com/mods/dawn-of-darkness1/downloads/dod-mood-scripts-gsm-tutorials-fgd-and-def-file>
   * Demo: [Episode 1](https://www.moddb.com/mods/dawn-of-darkness1/downloads/dawn-of-darkness-episode-1)
+* Infinity: The Kai'Ren Threat
+  * Demo: [Demo maps](https://www.moddb.com/mods/infinity-the-kairen-threat/downloads/infinity-demo)
 * JaBot:
   * SDK: <https://www.moddb.com/mods/jabotq2/downloads/jabot-q2-v09x-win32-and-linux>
 * Additional maps used for check maps support:
